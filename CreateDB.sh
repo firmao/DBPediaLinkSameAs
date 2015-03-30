@@ -39,8 +39,11 @@ http://data.dws.informatik.uni-mannheim.de/dbpedia/2014/en/freebase_links_en.ttl
 http://data.dws.informatik.uni-mannheim.de/dbpedia/2014/en/interlanguage_links_chapters_en.ttl.bz2
 http://data.dws.informatik.uni-mannheim.de/dbpedia/2014/en/interlanguage_links_en.ttl.bz2"
 
+#Remove previous loaded files, just for a clean up.
 rm -f ld.tsv
 
+#Import all triples into the file ld.tsv (Tab Separeted Value).
+#This commands already treat duplicates and proper formating.
 for file in "$links"
 do
     curl $file | bzcat | grep "\#sameAs" |  rapper -i ntriples -I - - file  2>/dev/null | cut -f1,3 -d '>' | sed 's/> </\t/g' | sed 's/> .&//g' | sed 's/^<//g' > temp.storage
@@ -50,6 +53,7 @@ cat correct.tsv
 
 done > ld.tsv
 
+#Create the database, table and import the file with all triples (ld.tsv) into the database.
 DBUSER=root
 DBPASSWORD=aux123
 DBNAME=dbSameAs
