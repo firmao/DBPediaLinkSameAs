@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions targetNamespace="http://sameas.services.com" xmlns:apachesoap="http://xml.apache.org/xml-soap" xmlns:impl="http://sameas.services.com" xmlns:intf="http://sameas.services.com" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:wsdlsoap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<!--WSDL created by Apache Axis version: 1.4
+Built on Apr 22, 2006 (06:55:48 PDT)-->
+ <wsdl:types>
+  <schema elementFormDefault="qualified" targetNamespace="http://sameas.services.com" xmlns="http://www.w3.org/2001/XMLSchema">
+   <element name="getSameAsURI">
+    <complexType>
+     <sequence>
+      <element name="pURI" type="xsd:string"/>
+     </sequence>
+    </complexType>
+   </element>
+   <element name="getSameAsURIResponse">
+    <complexType>
+     <sequence>
+      <element name="getSameAsURIReturn" type="xsd:string"/>
+     </sequence>
+    </complexType>
+   </element>
+  </schema>
+ </wsdl:types>
+
+   <wsdl:message name="getSameAsURIResponse">
+
+      <wsdl:part element="impl:getSameAsURIResponse" name="parameters">
+
+      </wsdl:part>
+
+   </wsdl:message>
+
+   <wsdl:message name="getSameAsURIRequest">
+
+      <wsdl:part element="impl:getSameAsURI" name="parameters">
+
+      </wsdl:part>
+
+   </wsdl:message>
+
+   <wsdl:portType name="SameAsWS">
+
+      <wsdl:operation name="getSameAsURI">
+
+         <wsdl:input message="impl:getSameAsURIRequest" name="getSameAsURIRequest">
+
+       </wsdl:input>
+
+         <wsdl:output message="impl:getSameAsURIResponse" name="getSameAsURIResponse">
+
+       </wsdl:output>
+
+      </wsdl:operation>
+
+   </wsdl:portType>
+
+   <wsdl:binding name="SameAsWSSoapBinding" type="impl:SameAsWS">
+
+      <wsdlsoap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+
+      <wsdl:operation name="getSameAsURI">
+
+         <wsdlsoap:operation soapAction=""/>
+
+         <wsdl:input name="getSameAsURIRequest">
+
+            <wsdlsoap:body use="literal"/>
+
+         </wsdl:input>
+
+         <wsdl:output name="getSameAsURIResponse">
+
+            <wsdlsoap:body use="literal"/>
+
+         </wsdl:output>
+
+      </wsdl:operation>
+
+   </wsdl:binding>
+
+   <wsdl:service name="SameAsWSService">
+
+      <wsdl:port binding="impl:SameAsWSSoapBinding" name="SameAsWS">
+
+         <wsdlsoap:address location="http://localhost:8080/SameAsService/services/SameAsWS"/>
+
+      </wsdl:port>
+
+   </wsdl:service>
+
+</wsdl:definitions>
