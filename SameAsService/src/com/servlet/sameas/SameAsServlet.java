@@ -41,8 +41,7 @@ public class SameAsServlet extends HttpServlet {
 	private void handleRequestAndRespond(HttpServletRequest request,
 			HttpServletResponse response) {
 		try {
-			//response.getWriter().write("SameAsServletService:");
-			if(request.getParameter("uri") != null)
+			if(request.getParameter("uri") != null)// Graphical User Interface.
 			{
 				request.getSession().setAttribute("subject", request.getParameter("uri"));
 				SameAsWS sameas = new SameAsWS();
@@ -55,7 +54,7 @@ public class SameAsServlet extends HttpServlet {
 					response.sendRedirect("notfound.jsp");
 				//response.getWriter().write(sameas.getSameAsURI(request.getParameter("uri"),true));
 			}
-			if(request.getParameter("uris") != null)
+			if(request.getParameter("uris") != null)// Just the service on the web.
 			{
 				request.getSession().setAttribute("subject", request.getParameter("uris"));
 				SameAsWS sameas = new SameAsWS();
@@ -65,7 +64,6 @@ public class SameAsServlet extends HttpServlet {
 					response.getWriter().write(sameas.getSameAsURI(request.getParameter("uris"),true));
 				}else
 					response.sendRedirect("notfound.jsp");
-				//response.getWriter().write(sameas.getSameAsURI(request.getParameter("uri"),true));
 			}	
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
