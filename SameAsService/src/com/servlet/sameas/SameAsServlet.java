@@ -61,7 +61,7 @@ public class SameAsServlet extends HttpServlet {
 				String dbpediaLink = sameas.getSameAsURI(request.getParameter("uris"),true);
 				if(dbpediaLink != null)
 				{
-					response.getWriter().write(sameas.getSameAsURI(request.getParameter("uris"),true));
+					response.getWriter().write(dbpediaLink);
 				}else
 					response.sendRedirect("notfound.jsp");
 			}	
