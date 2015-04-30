@@ -48,12 +48,25 @@ public class SameAsServlet extends HttpServlet {
 				SameAsWS sameas = new SameAsWS();
 				String dbpediaLink = sameas.getSameAsURI(request.getParameter("uri"),true);
 				if(dbpediaLink != null)
+				{
 					response.sendRedirect("link.jsp?dbpedialink=" + dbpediaLink);
-				else
+					//response.sendRedirect("link_frame.jsp?dbpedialink=" + dbpediaLink);
+				}else
 					response.sendRedirect("notfound.jsp");
 				//response.getWriter().write(sameas.getSameAsURI(request.getParameter("uri"),true));
 			}
-				
+			if(request.getParameter("uris") != null)
+			{
+				request.getSession().setAttribute("subject", request.getParameter("uris"));
+				SameAsWS sameas = new SameAsWS();
+				String dbpediaLink = sameas.getSameAsURI(request.getParameter("uris"),true);
+				if(dbpediaLink != null)
+				{
+					response.getWriter().write(sameas.getSameAsURI(request.getParameter("uris"),true));
+				}else
+					response.sendRedirect("notfound.jsp");
+				//response.getWriter().write(sameas.getSameAsURI(request.getParameter("uri"),true));
+			}	
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
