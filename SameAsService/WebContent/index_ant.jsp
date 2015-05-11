@@ -16,9 +16,10 @@
 	<br>Example: http://rdf.freebase.com/ns/m.015fr
 	<script>
 		function callService() {
+			var url = document.getElementById("uri").value.replace("#", "123nada");
 			window.location
-					.assign("http://localhost:8080/SameAsService/SameAsServlet?uri="
-							+ document.getElementById("uri").value);
+					.assign("SameAsServlet?uri="
+							+ url);
 		}
 	</script>
 </body>
