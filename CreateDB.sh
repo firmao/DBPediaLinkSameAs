@@ -66,6 +66,5 @@ echo "CREATE DATABASE ${DBNAME}" | mysql ${DBCONN}
 echo "CREATE TABLE RAW_SAMEAS (dbpedia_uri varchar(750) DEFAULT NULL, link_target varchar(750) DEFAULT NULL, r_positive int(11) DEFAULT 0, r_negative int(11) DEFAULT 0)" | mysql $DBCONN $DBNAME
 echo "CREATE TABLE VOTE (dbpedia_uri varchar(750) DEFAULT NULL, link_target varchar(750) DEFAULT NULL, vote int(11) DEFAULT '0', suggestion varchar(750) DEFAULT NULL)" | mysql $DBCONN $DBNAME
 echo "CREATE TABLE NEWLINKS (dbpedia_uri varchar(750) DEFAULT NULL, link_target varchar(750) DEFAULT NULL, KEY PK_NEWLINKS (dbpedia_uri, link_target))" | mysql $DBCONN $DBNAME
-echo "CREATE TABLE RAW_SAMEAS1 (dbpedia_uri varchar(750) DEFAULT NULL, link_target varchar(750) DEFAULT NULL, r_positive int(11) DEFAULT 0, r_negative int(11) DEFAULT 0)" | mysql $DBCONN $DBNAME
 
 echo "LOAD DATA LOCAL INFILE 'ld.tsv' INTO TABLE RAW_SAMEAS FIELDS TERMINATED BY '\t'" | mysql $DBCONN $DBNAME --local-infile=1
