@@ -10,7 +10,6 @@ import java.util.logging.Logger;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.MalformedURLException;
 import java.net.URL;
 
 import javax.naming.*;
@@ -29,6 +28,7 @@ public class SameAsWS {
 	 * @return
 	 */
 	public String getSameAsURI(String pURI, boolean pNormalize) {
+		long startTime = System.currentTimeMillis();
 		String sRet = "[";
 		Connection con = null;
 		Statement st = null;
@@ -42,76 +42,27 @@ public class SameAsWS {
 			if (ds != null) {
 				con = ds.getConnection();
 			}
-			// con = DriverManager.getConnection(url, user, password);
-			st = con.createStatement();
-			String sQuery = "Select dbpedia_uri from RAW_SAMEAS1 where link_target = '"
-					+ pURI + "'";
-			rs = st.executeQuery(sQuery);
-			String res = null;
-			boolean bInternet = isConnected();
-			while (rs.next()) {
-				res = getRealURI(rs.getString(1),bInternet);
 
-				if (pNormalize) {
-					sRet = res;
-					if (sRet != null)
-						break;
-				} else
-					sRet += "{\"uri\":\"" + res + "\"},";
-			}
-
-		} catch (Exception ex) {
-			Logger lgr = Logger.getLogger(SameAsWS.class.getName());
-			lgr.log(Level.SEVERE, ex.getMessage(), ex);
-
-		} finally {
-			try {
-				if (rs != null) {
-					rs.close();
-				}
-				if (st != null) {
-					st.close();
-				}
-				if (con != null) {
-					con.close();
-				}
-
-			} catch (SQLException ex) {
-				Logger lgr = Logger.getLogger(SameAsWS.class.getName());
-				lgr.log(Level.WARNING, ex.getMessage(), ex);
-			}
-		}
-		if (!pNormalize)
-			sRet = sRet.substring(0, sRet.length() - 1) + "]";
-
-		if (sRet.length() < 2)
-			sRet = secondTry(pURI, pNormalize);
-		return sRet;
-	}
-
-	private String secondTry(String pURI, boolean pNormalize) {
-		String sRet = "[";
-		Connection con = null;
-		Statement st = null;
-		ResultSet rs = null;
-		System.out.println("Going to second try, table RAW_SAMEAS");
-		try {
-
-			Context ctx = new InitialContext();
-			DataSource ds = (DataSource) ctx.lookup("java:comp/env/jdbc/mysql");
-
-			if (ds != null) {
-				con = ds.getConnection();
-			}
-			// con = DriverManager.getConnection(url, user, password);
 			st = con.createStatement();
 			String sQuery = "Select dbpedia_uri from RAW_SAMEAS where link_target = '"
 					+ pURI + "'";
+			// String sQuery = "CALL spSelect('"+pURI+"');";
+			// String sQuery =
+			// "CALL spSelect('http://www.bbc.co.uk/nature/species/Green_Woodpecker#species');";
+
 			rs = st.executeQuery(sQuery);
+
+			// String sQuery =
+			// "Select dbpedia_uri from RAW_SAMEAS where link_target = ?";
+			// PreparedStatement preparedStatement =
+			// con.prepareStatement(sQuery);
+			// preparedStatement.setObject(1, pURI);
+			// rs = preparedStatement.executeQuery(sQuery);
+
 			String res = null;
 			boolean bInternet = isConnected();
 			while (rs.next()) {
-				res = getRealURI(rs.getString(1),bInternet);
+				res = getRealURI(rs.getString(1), bInternet);
 
 				if (pNormalize) {
 					sRet = res;
@@ -145,12 +96,52 @@ public class SameAsWS {
 		if (!pNormalize)
 			sRet = sRet.substring(0, sRet.length() - 1) + "]";
 
-		if (sRet.length() < 2)
+		if (sRet.length() < 2) {
+			// sRet = secondTry(pURI, pNormalize);
 			sRet = null;
+		}
+
+		System.out.println("Total time [seconds]: "
+				+ (System.currentTimeMillis() - startTime) * 0.001);
+
 		return sRet;
 	}
 
-	/* 
+	/*
+	 * private String secondTry(String pURI, boolean pNormalize) { String sRet =
+	 * "["; Connection con = null; Statement st = null; ResultSet rs = null;
+	 * System.out.println("Going to second try, table RAW_SAMEAS"); try {
+	 * 
+	 * Context ctx = new InitialContext(); DataSource ds = (DataSource)
+	 * ctx.lookup("java:comp/env/jdbc/mysql");
+	 * 
+	 * if (ds != null) { con = ds.getConnection(); } // con =
+	 * DriverManager.getConnection(url, user, password); st =
+	 * con.createStatement(); String sQuery =
+	 * "Select dbpedia_uri from RAW_SAMEAS where link_target = '" + pURI + "'";
+	 * rs = st.executeQuery(sQuery); String res = null; boolean bInternet =
+	 * isConnected(); while (rs.next()) { res =
+	 * getRealURI(rs.getString(1),bInternet);
+	 * 
+	 * if (pNormalize) { sRet = res; if (sRet != null) break; } else sRet +=
+	 * "{\"uri\":\"" + res + "\"},"; }
+	 * 
+	 * } catch (Exception ex) { Logger lgr =
+	 * Logger.getLogger(SameAsWS.class.getName()); lgr.log(Level.SEVERE,
+	 * ex.getMessage(), ex);
+	 * 
+	 * } finally { try { if (rs != null) { rs.close(); } if (st != null) {
+	 * st.close(); } if (con != null) { con.close(); }
+	 * 
+	 * } catch (SQLException ex) { Logger lgr =
+	 * Logger.getLogger(SameAsWS.class.getName()); lgr.log(Level.WARNING,
+	 * ex.getMessage(), ex); } } if (!pNormalize) sRet = sRet.substring(0,
+	 * sRet.length() - 1) + "]";
+	 * 
+	 * if (sRet.length() < 2) sRet = null; return sRet; }
+	 */
+
+	/*
 	 * Just to check if there are internet connection
 	 */
 	private boolean isConnected() {
@@ -245,8 +236,7 @@ public class SameAsWS {
 		}
 	}
 
-	private String getRedirect(String pURI)
-	{
+	private String getRedirect(String pURI) {
 		String sRet = null;
 		Connection con = null;
 		Statement st = null;
@@ -262,8 +252,8 @@ public class SameAsWS {
 			}
 			// con = DriverManager.getConnection(url, user, password);
 			st = con.createStatement();
-			String sQuery = "Select to_uri from REDIRECT where from = '"
-					+ pURI + "'";
+			String sQuery = "Select to_uri from REDIRECT where from = '" + pURI
+					+ "'";
 			rs = st.executeQuery(sQuery);
 			String res = null;
 			while (rs.next()) {
@@ -295,12 +285,11 @@ public class SameAsWS {
 
 		if (sRet.length() < 2)
 			sRet = null;
-		
+
 		return sRet;
 	}
-	
-	public void insertLink(String pSubject, String pObject)
-	{
+
+	public void insertLink(String pSubject, String pObject) {
 		Connection conn = null;
 		Context ctx;
 		try {
