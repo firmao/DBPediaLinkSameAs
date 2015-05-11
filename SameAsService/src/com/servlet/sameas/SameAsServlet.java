@@ -43,9 +43,11 @@ public class SameAsServlet extends HttpServlet {
 		try {
 			if(request.getParameter("uri") != null)// Graphical User Interface.
 			{
-				request.getSession().setAttribute("subject", request.getParameter("uri"));
+				String uri = request.getParameter("uri");
+				uri = uri.replaceAll("123nada", "#").trim();
+				request.getSession().setAttribute("subject", uri);
 				SameAsWS sameas = new SameAsWS();
-				String dbpediaLink = sameas.getSameAsURI(request.getParameter("uri"),true);
+				String dbpediaLink = sameas.getSameAsURI(uri,true);
 				if(dbpediaLink != null)
 				{
 					response.sendRedirect("link.jsp?dbpedialink=" + dbpediaLink);
@@ -56,9 +58,11 @@ public class SameAsServlet extends HttpServlet {
 			}
 			if(request.getParameter("uris") != null)// Just the service on the web.
 			{
-				request.getSession().setAttribute("subject", request.getParameter("uris"));
+				String uri = request.getParameter("uris");
+				uri = uri.replaceAll("123nada", "#").trim();
+				request.getSession().setAttribute("subject", uri);
 				SameAsWS sameas = new SameAsWS();
-				String dbpediaLink = sameas.getSameAsURI(request.getParameter("uris"),true);
+				String dbpediaLink = sameas.getSameAsURI(uri,true);
 				if(dbpediaLink != null)
 				{
 					response.getWriter().write(dbpediaLink);
