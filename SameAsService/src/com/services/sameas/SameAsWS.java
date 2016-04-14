@@ -5,8 +5,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -16,7 +19,9 @@ import javax.naming.*;
 import javax.sql.*;
 
 public class SameAsWS {
-
+	public static boolean UNDER_EVALUATION = false;
+	public static List<String> lstSameAs = new ArrayList<String>();
+	public static String information = null;
 	/*
 	 * User provides an URI and the API will return the DBpedia URI that is
 	 * owl:sameAs with the one the user provided. Example:
@@ -46,28 +51,20 @@ public class SameAsWS {
 			st = con.createStatement();
 			String sQuery = "Select dbpedia_uri from RAW_SAMEAS where link_target = '"
 					+ pURI + "'";
-			// String sQuery = "CALL spSelect('"+pURI+"');";
-			// String sQuery =
-			// "CALL spSelect('http://www.bbc.co.uk/nature/species/Green_Woodpecker#species');";
 
 			rs = st.executeQuery(sQuery);
 
-			// String sQuery =
-			// "Select dbpedia_uri from RAW_SAMEAS where link_target = ?";
-			// PreparedStatement preparedStatement =
-			// con.prepareStatement(sQuery);
-			// preparedStatement.setObject(1, pURI);
-			// rs = preparedStatement.executeQuery(sQuery);
-
 			String res = null;
+			//boolean bInternet = false;
 			boolean bInternet = isConnected();
+			SameAsWS.lstSameAs.clear();
 			while (rs.next()) {
 				res = getRealURI(rs.getString(1), bInternet);
-
+				SameAsWS.lstSameAs.add(rs.getString(1));
 				if (pNormalize) {
 					sRet = res;
-					if (sRet != null)
-						break;
+					//if (sRet != null)
+					//	break;
 				} else
 					sRet += "{\"uri\":\"" + res + "\"},";
 			}
@@ -96,10 +93,12 @@ public class SameAsWS {
 		if (!pNormalize)
 			sRet = sRet.substring(0, sRet.length() - 1) + "]";
 
-		if (sRet.length() < 2) {
-			// sRet = secondTry(pURI, pNormalize);
-			sRet = null;
+		if (sRet == null || sRet.length() < 2) {
+			sRet = tryNew(pURI, pNormalize);
+			// sRet = null;
 		}
+		else
+			SameAsWS.UNDER_EVALUATION = false;
 
 		System.out.println("Total time [seconds]: "
 				+ (System.currentTimeMillis() - startTime) * 0.001);
@@ -107,39 +106,62 @@ public class SameAsWS {
 		return sRet;
 	}
 
-	/*
-	 * private String secondTry(String pURI, boolean pNormalize) { String sRet =
-	 * "["; Connection con = null; Statement st = null; ResultSet rs = null;
-	 * System.out.println("Going to second try, table RAW_SAMEAS"); try {
-	 * 
-	 * Context ctx = new InitialContext(); DataSource ds = (DataSource)
-	 * ctx.lookup("java:comp/env/jdbc/mysql");
-	 * 
-	 * if (ds != null) { con = ds.getConnection(); } // con =
-	 * DriverManager.getConnection(url, user, password); st =
-	 * con.createStatement(); String sQuery =
-	 * "Select dbpedia_uri from RAW_SAMEAS where link_target = '" + pURI + "'";
-	 * rs = st.executeQuery(sQuery); String res = null; boolean bInternet =
-	 * isConnected(); while (rs.next()) { res =
-	 * getRealURI(rs.getString(1),bInternet);
-	 * 
-	 * if (pNormalize) { sRet = res; if (sRet != null) break; } else sRet +=
-	 * "{\"uri\":\"" + res + "\"},"; }
-	 * 
-	 * } catch (Exception ex) { Logger lgr =
-	 * Logger.getLogger(SameAsWS.class.getName()); lgr.log(Level.SEVERE,
-	 * ex.getMessage(), ex);
-	 * 
-	 * } finally { try { if (rs != null) { rs.close(); } if (st != null) {
-	 * st.close(); } if (con != null) { con.close(); }
-	 * 
-	 * } catch (SQLException ex) { Logger lgr =
-	 * Logger.getLogger(SameAsWS.class.getName()); lgr.log(Level.WARNING,
-	 * ex.getMessage(), ex); } } if (!pNormalize) sRet = sRet.substring(0,
-	 * sRet.length() - 1) + "]";
-	 * 
-	 * if (sRet.length() < 2) sRet = null; return sRet; }
-	 */
+	private String tryNew(String pURI, boolean pNormalize) {
+		String sRet = "[";
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+		System.out.println("Going to second try, table NEWLINKS");
+		try {
+
+			Context ctx = new InitialContext();
+			DataSource ds = (DataSource) ctx.lookup("java:comp/env/jdbc/mysql");
+
+			if (ds != null) {
+				con = ds.getConnection();
+			}
+
+			st = con.createStatement();
+			String sQuery = "Select dbpedia_uri from NEWLINKS where link_target = '"
+					+ pURI + "'";
+
+			rs = st.executeQuery(sQuery);
+
+			// boolean bInternet = isConnected();
+			while (rs.next()) {
+				sRet = rs.getString(1);
+			}
+
+		} catch (Exception ex) {
+			Logger lgr = Logger.getLogger(SameAsWS.class.getName());
+			lgr.log(Level.SEVERE, ex.getMessage(), ex);
+
+		} finally {
+			try {
+				if (rs != null) {
+					rs.close();
+				}
+				if (st != null) {
+					st.close();
+				}
+				if (con != null) {
+					con.close();
+				}
+
+			} catch (SQLException ex) {
+				Logger lgr = Logger.getLogger(SameAsWS.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+			}
+		}
+
+		if (sRet.length() < 2) {
+			sRet = null;
+			SameAsWS.UNDER_EVALUATION = false;
+		} else
+			SameAsWS.UNDER_EVALUATION = true;
+
+		return sRet;
+	}
 
 	/*
 	 * Just to check if there are internet connection
@@ -171,6 +193,9 @@ public class SameAsWS {
 
 				String line = null;
 				while ((line = reader.readLine()) != null) {
+					if (line.indexOf("<title>") > 0) {
+						SameAsWS.information = line.substring(11, line.length() - 8);
+					}
 					if (line.indexOf("rel=\"foaf:primarytopic") > 0) {
 						int ind = line.indexOf("href");
 						ret = line.substring(ind + 6, line.length() - 3);
@@ -252,8 +277,8 @@ public class SameAsWS {
 			}
 			// con = DriverManager.getConnection(url, user, password);
 			st = con.createStatement();
-			String sQuery = "Select to_uri from REDIRECT where from = '" + pURI
-					+ "'";
+			String sQuery = "Select to_uri from TBL_REDIRECT where from_uri = '"
+					+ pURI + "'";
 			rs = st.executeQuery(sQuery);
 			String res = null;
 			while (rs.next()) {
@@ -283,7 +308,7 @@ public class SameAsWS {
 			}
 		}
 
-		if (sRet.length() < 2)
+		if (sRet != null && sRet.length() < 2)
 			sRet = null;
 
 		return sRet;
@@ -302,8 +327,8 @@ public class SameAsWS {
 			}
 			PreparedStatement prep = conn
 					.prepareStatement("INSERT INTO NEWLINKS (dbpedia_uri, link_target) VALUES (?, ?);");
-			prep.setString(1, pObject);
-			prep.setString(2, pSubject);
+			prep.setString(1, pObject.trim());
+			prep.setString(2, pSubject.trim());
 
 			prep.executeUpdate();
 		} catch (Exception e) {
@@ -311,4 +336,103 @@ public class SameAsWS {
 			e.printStackTrace();
 		}
 	}
+	
+	public static String getVotes(String pURI)
+	{
+		String sRet = null;
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+		try {
+			Context ctx = new InitialContext();
+			DataSource ds = (DataSource) ctx.lookup("java:comp/env/jdbc/mysql");
+
+			if (ds != null) {
+				con = ds.getConnection();
+			}
+
+			st = con.createStatement();
+			String sQuery = null;
+			pURI = pURI.replaceAll("'", "\\\\'");
+			sQuery = "SELECT count(1) as totalpositivo FROM VOTE where dbpedia_uri = '"+pURI+"' and vote > 0";
+			rs = st.executeQuery(sQuery);
+			while (rs.next()) {
+				sRet = rs.getString(1);
+			}
+			rs = null;
+			sQuery = "SELECT count(1) as totalnegativo FROM VOTE where dbpedia_uri = '"+pURI+"' and vote < 0";
+			rs = st.executeQuery(sQuery);
+			while (rs.next()) {
+				sRet = sRet + "," + rs.getString(1);
+			}
+			
+		} catch (Exception ex) {
+			Logger lgr = Logger.getLogger(SameAsWS.class.getName());
+			lgr.log(Level.SEVERE, ex.getMessage(), ex);
+
+		} finally {
+			try {
+				if (rs != null) {
+					rs.close();
+				}
+				if (st != null) {
+					st.close();
+				}
+				if (con != null) {
+					con.close();
+				}
+
+			} catch (SQLException ex) {
+				Logger lgr = Logger.getLogger(SameAsWS.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+			}
+		}
+
+		
+		return sRet;
+	}
+
+	public String getSameAsURIs(String pURI, boolean pNormalize){
+		long startTime = System.currentTimeMillis();
+		String sRet = "[";
+
+		try {
+
+			
+			String res = null;
+			boolean bInternet = isConnected();
+			SameAsWS.lstSameAs.clear();
+			SameAsWS.lstSameAs = JenaSparql.getJenaSparql(pURI);
+			
+			for (String element : SameAsWS.lstSameAs)
+			{
+				res = getRealURI(element, bInternet);
+				if (res != null)
+					if (res.length() > 2)
+					{
+						if(pNormalize){
+							sRet = res;
+							break;
+						} else
+							sRet += "{\"uri\":\"" + element + "\"},";
+					}
+			}
+
+		} catch (Exception ex) {
+			Logger lgr = Logger.getLogger(SameAsWS.class.getName());
+			lgr.log(Level.SEVERE, ex.getMessage(), ex);  
+		}
+
+		if (sRet == null || sRet.length() < 2) {
+			sRet = tryNew(pURI, false);
+		}
+		else
+			SameAsWS.UNDER_EVALUATION = false;
+
+		System.out.println("Total time [seconds]: "
+				+ (System.currentTimeMillis() - startTime) * 0.001);
+
+		return sRet;
+	}
+	
 }
